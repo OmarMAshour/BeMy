@@ -91,9 +91,8 @@
       border: 1px solid rgba(255, 255, 255, 0.5);
       color: var(--muted);
       box-shadow: 0 12px 24px rgba(7, 5, 20, 0.5);
-      position: absolute;
-      top: 0;
-      right: 0;
+      transition: transform 0.4s ease, opacity 0.4s ease;
+      pointer-events: auto;
     }
 
     .no-button:hover,
@@ -158,29 +157,26 @@
 
   <script>
     const noButton = document.querySelector(".no-button");
-    const container = document.querySelector(".button-row");
     const yesButton = document.querySelector(".yes-button");
     const surprise = document.querySelector(".surprise");
     const card = document.querySelector(".card");
+    let noButtonGone = false;
 
-    const jitter = () => {
-      const { width, height } = container.getBoundingClientRect();
-      const btnWidth = noButton.offsetWidth;
-      const btnHeight = noButton.offsetHeight;
-      const maxX = Math.max(width - btnWidth, 0);
-      const maxY = Math.max(height - btnHeight, 0);
-      const randomX = Math.random() * maxX;
-      const randomY = Math.random() * maxY;
-      noButton.style.transform = `translate(${randomX}px, ${randomY}px)`;
+    const vanishNoButton = () => {
+      if (noButtonGone) return;
+      noButtonGone = true;
+      noButton.style.transform = "translateY(-200vh)";
+      noButton.style.opacity = "0";
+      noButton.style.pointerEvents = "none";
+      setTimeout(() => {
+        noButton.style.display = "none";
+      }, 450);
     };
 
-    // keep moving the 'No' button when the cursor gets close
-    noButton.addEventListener("mouseenter", jitter);
-    noButton.addEventListener("mousemove", jitter);
-    noButton.addEventListener("focus", jitter);
-
-    // reposition occasionally in case keyboard navigation tries to hit it
-    setInterval(jitter, 3500);
+    noButton.addEventListener("mouseenter", vanishNoButton);
+    noButton.addEventListener("mousemove", vanishNoButton);
+    noButton.addEventListener("focus", vanishNoButton);
+    noButton.addEventListener("click", vanishNoButton);
 
     yesButton.addEventListener("click", () => {
       card.style.visibility = "hidden";
