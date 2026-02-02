@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Be My Valentine?</title>
+  <style>
+    :root {
+      --canvas-color: #ffffff;
+      --accent-color: #ff5f8b;
+      --muted: #1d1b2b;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      background: #fff;
+      font-family: "Helvetica Neue", system-ui, sans-serif;
+      color: var(--muted);
+    }
+
+    #heartCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+
+    .card {
+      text-align: center;
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid rgba(255, 92, 142, 0.35);
+      padding: 3rem 2.5rem;
+      border-radius: 1.25rem;
+      max-width: 480px;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(6, 5, 23, 0.45);
+    }
+
+    h1 {
+      font-size: clamp(2.25rem, 4vw, 3rem);
+      margin-bottom: 1.5rem;
+    }
+
+    p {
+      margin-bottom: 2rem;
+      color: rgba(29, 27, 43, 0.85);
+    }
+
+    .button-row {
+      display: flex;
+      justify-content: center;
+      gap: 1.25rem;
+      position: relative;
+      min-height: 2.5rem;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 0.85rem 2.2rem;
+      font-size: 1rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      position: relative;
+      outline: none;
+    }
+
+    button:active {
+      transform: scale(0.95);
+    }
+
+    .yes-button {
+      background: linear-gradient(135deg, #ff6fb5, #ff8f65);
+      color: #1d1b2b;
+      box-shadow: 0 10px 20px rgba(255, 111, 181, 0.4);
+    }
+
+    .no-button {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      color: var(--muted);
+      box-shadow: 0 12px 24px rgba(7, 5, 20, 0.5);
+      position: absolute;
+      top: 0;
+      right: 0;
+    }
+
+    .no-button:hover,
+    .no-button:focus-visible {
+      border-color: rgba(255, 255, 255, 0.9);
+    }
+
+    .surprise {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 1rem;
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+      background: rgba(255, 255, 255, 0);
+    }
+
+    .surprise img {
+      max-width: min(320px, 100%);
+      border-radius: 1rem;
+      box-shadow: 0 20px 40px rgba(5, 4, 18, 0.6);
+    }
+
+    .surprise.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .surprise p {
+      font-size: 1.1rem;
+      margin: 0;
+      letter-spacing: 0.02em;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="heartCanvas" aria-hidden="true"></canvas>
+  <div class="card">
+    <p>Just a simple question for the sweetest person on my mind. ❤️</p>
+    <h1>Would you be my valentine?</h1>
+    <div class="button-row">
+      <button class="yes-button" type="button">Yes</button>
+      <button class="no-button" type="button">No</button>
+    </div>
+  </div>
+
+  <div class="surprise" aria-live="polite">
+    <img
+      src="https://media.giphy.com/media/y5efFpqW5knlu/giphy.gif"
+      alt="Naruto and Sasuke hugging"
+    />
+    <br>
+    <p style="color: gray;">Yoghoooty said yes! 💃💃❤️❤️</p>
+  </div>
+
+  <script>
+    const noButton = document.querySelector(".no-button");
+    const container = document.querySelector(".button-row");
+    const yesButton = document.querySelector(".yes-button");
+    const surprise = document.querySelector(".surprise");
+    const card = document.querySelector(".card");
+
+    const jitter = () => {
+      const { width, height } = container.getBoundingClientRect();
+      const btnWidth = noButton.offsetWidth;
+      const btnHeight = noButton.offsetHeight;
+      const maxX = Math.max(width - btnWidth, 0);
+      const maxY = Math.max(height - btnHeight, 0);
+      const randomX = Math.random() * maxX;
+      const randomY = Math.random() * maxY;
+      noButton.style.transform = `translate(${randomX}px, ${randomY}px)`;
+    };
+
+    // keep moving the 'No' button when the cursor gets close
+    noButton.addEventListener("mouseenter", jitter);
+    noButton.addEventListener("mousemove", jitter);
+    noButton.addEventListener("focus", jitter);
+
+    // reposition occasionally in case keyboard navigation tries to hit it
+    setInterval(jitter, 3500);
+
+    yesButton.addEventListener("click", () => {
+      card.style.visibility = "hidden";
+      surprise.classList.add("visible");
+    });
+
+    const canvas = document.querySelector("#heartCanvas");
+    const ctx = canvas.getContext("2d");
+    const hearts = [];
+
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    const createHeart = () => ({
+      x: Math.random() * canvas.width,
+      y: canvas.height + 20,
+      size: 12 + Math.random() * 18,
+      speed: 0.5 + Math.random(),
+      drift: (Math.random() - 0.5) * 0.6,
+      opacity: 0.6 + Math.random() * 0.4,
+    });
+
+    const updateHearts = () => {
+      if (hearts.length < 25) {
+        hearts.push(createHeart());
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#ff4d6d";
+
+      hearts.forEach((heart, index) => {
+        heart.y -= heart.speed;
+        heart.x += heart.drift;
+        heart.opacity -= 0.002;
+
+        if (heart.opacity <= 0) {
+          hearts.splice(index, 1);
+          return;
+        }
+
+        ctx.save();
+        ctx.globalAlpha = heart.opacity;
+        ctx.beginPath();
+        ctx.moveTo(heart.x, heart.y);
+        ctx.bezierCurveTo(
+          heart.x - heart.size / 2,
+          heart.y - heart.size / 2,
+          heart.x - heart.size,
+          heart.y + heart.size / 3,
+          heart.x,
+          heart.y + heart.size
+        );
+        ctx.bezierCurveTo(
+          heart.x + heart.size,
+          heart.y + heart.size / 3,
+          heart.x + heart.size / 2,
+          heart.y - heart.size / 2,
+          heart.x,
+          heart.y
+        );
+        ctx.fill();
+        ctx.restore();
+      });
+
+      requestAnimationFrame(updateHearts);
+    };
+
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+    updateHearts();
+  </script>
+</body>
+</html>
